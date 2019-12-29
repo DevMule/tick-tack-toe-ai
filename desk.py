@@ -48,7 +48,7 @@ class Desk:
         while (not self.__out_of_desk_range(x, y + shift)) and (self.__desk[y + shift][x] == self.__turn):
             in_row += 1
             shift -= 1
-        if in_row-1 >= self.__row_to_win:
+        if in_row - 1 >= self.__row_to_win:
             return True
 
         #  horizontal
@@ -60,31 +60,35 @@ class Desk:
         while (not self.__out_of_desk_range(x + shift, y)) and (self.__desk[y][x + shift] == self.__turn):
             in_row += 1
             shift -= 1
-        if in_row-1 >= self.__row_to_win:
+        if in_row - 1 >= self.__row_to_win:
             return True
 
         #  diagonal left up
         shift = in_row = 0
-        while (not self.__out_of_desk_range(x + shift, y + shift)) and (self.__desk[y + shift][x + shift] == self.__turn):
+        while (not self.__out_of_desk_range(x + shift, y + shift)) and (
+                self.__desk[y + shift][x + shift] == self.__turn):
             in_row += 1
             shift += 1
         shift = 0
-        while (not self.__out_of_desk_range(x + shift, y + shift)) and (self.__desk[y + shift][x + shift] == self.__turn):
+        while (not self.__out_of_desk_range(x + shift, y + shift)) and (
+                self.__desk[y + shift][x + shift] == self.__turn):
             in_row += 1
             shift -= 1
-        if in_row-1 >= self.__row_to_win:
+        if in_row - 1 >= self.__row_to_win:
             return True
 
         #  diagonal right up
         shift = in_row = 0
-        while (not self.__out_of_desk_range(x - shift, y + shift)) and (self.__desk[y + shift][x - shift] == self.__turn):
+        while (not self.__out_of_desk_range(x - shift, y + shift)) and (
+                self.__desk[y + shift][x - shift] == self.__turn):
             in_row += 1
             shift += 1
         shift = 0
-        while (not self.__out_of_desk_range(x - shift, y + shift)) and (self.__desk[y + shift][x - shift] == self.__turn):
+        while (not self.__out_of_desk_range(x - shift, y + shift)) and (
+                self.__desk[y + shift][x - shift] == self.__turn):
             in_row += 1
             shift -= 1
-        if in_row-1 >= self.__row_to_win:
+        if in_row - 1 >= self.__row_to_win:
             return True
 
         return False
@@ -101,6 +105,10 @@ class Desk:
         return x > len(self.__desk[0]) - 1 or x < 0 or y > len(self.__desk) - 1 or y < 0
 
     def make_turn(self, x, y):
+        if self.__check_ways() == 0:
+            self.winner = "TIE"
+            return False
+
         # todo refactor function
         if not type(x) is int or not type(y) is int:
             return False

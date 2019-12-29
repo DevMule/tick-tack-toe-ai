@@ -13,7 +13,7 @@ def print_desk(desk):
             elif desk[i][j] == 0:
                 print_string += "[0]"
             else:
-                print_string += "[" + str(3*i + j + 1) + "]"
+                print_string += "[" + str(len(desk[i])*i + j + 1) + "]"
         print(print_string)
 
 
@@ -21,8 +21,8 @@ game = True
 while game:
     print_desk(d.desk)
     insert = int(input("Player " + d.turn + " its your turn, \nwrite place you like: "))
-    y = int((insert - 1) / 3)
-    x = (insert - 1) % 3
+    y = int((insert - 1) / len(d.desk[0]))
+    x = (insert - 1) % len(d.desk[0])
 
     d.make_turn(x, y)
 
