@@ -1,29 +1,28 @@
 from desk import Desk
 
-d = Desk()
+d = Desk(3, 3, 3)
 
 
 def print_desk(desk):
-    print("\n\n_| 0 1 2 ")
+    print("\n\n")
     for i in range(len(desk)):
-        print_string = "" + str(i) + "| "
+        print_string = ""
         for j in range(len(desk[i])):
             if desk[i][j] == 1:
-                print_string += "X "
+                print_string += "[X]"
             elif desk[i][j] == 0:
-                print_string += "0 "
+                print_string += "[0]"
             else:
-                print_string += "_ "
+                print_string += "[" + str(3*i + j + 1) + "]"
         print(print_string)
 
 
 game = True
 while game:
     print_desk(d.desk)
-    insert = input("Player " + d.turn + " its your turn, \nwrite coords like 'x, y': ")
-    insert = insert.split(",")
-    x = int(insert[0])
-    y = int(insert[1])
+    insert = int(input("Player " + d.turn + " its your turn, \nwrite place you like: "))
+    y = int((insert - 1) / 3)
+    x = (insert - 1) % 3
 
     d.make_turn(x, y)
 

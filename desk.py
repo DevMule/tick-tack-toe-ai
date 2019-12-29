@@ -48,7 +48,6 @@ class Desk:
         while (not self.__out_of_desk_range(x, y + shift)) and (self.__desk[y + shift][x] == self.__turn):
             in_row += 1
             shift -= 1
-        print("vertical: " + str(in_row-1))
         if in_row-1 >= self.__row_to_win:
             return True
 
@@ -61,7 +60,6 @@ class Desk:
         while (not self.__out_of_desk_range(x + shift, y)) and (self.__desk[y][x + shift] == self.__turn):
             in_row += 1
             shift -= 1
-        print("hor: " + str(in_row-1))
         if in_row-1 >= self.__row_to_win:
             return True
 
@@ -74,7 +72,6 @@ class Desk:
         while (not self.__out_of_desk_range(x + shift, y + shift)) and (self.__desk[y + shift][x + shift] == self.__turn):
             in_row += 1
             shift -= 1
-        print("diagonal left up: " + str(in_row-1))
         if in_row-1 >= self.__row_to_win:
             return True
 
@@ -87,7 +84,6 @@ class Desk:
         while (not self.__out_of_desk_range(x - shift, y + shift)) and (self.__desk[y + shift][x - shift] == self.__turn):
             in_row += 1
             shift -= 1
-        print("diagonal right up: " + str(in_row-1))
         if in_row-1 >= self.__row_to_win:
             return True
 
