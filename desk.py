@@ -8,12 +8,12 @@ desk_consts = {
 
 
 class Desk:
-    def __init__(self):
+    def __init__(self, w=3, h=3, win_row=3):
         self.__desk = None
         self.__turn = desk_consts["X"]
         self.__row_to_win = 3
         self.winner = None
-        self.clear()
+        self.clear(w, h, win_row)
 
     # getters & setters
     def get_desk(self):
