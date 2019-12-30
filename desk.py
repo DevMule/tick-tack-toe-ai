@@ -105,9 +105,6 @@ class Desk:
         return x > len(self.__desk[0]) - 1 or x < 0 or y > len(self.__desk) - 1 or y < 0
 
     def make_turn(self, x, y):
-        if self.__check_ways() == 0:
-            self.winner = "TIE"
-            return False
 
         # todo refactor function
         if not type(x) is int or not type(y) is int:
@@ -122,7 +119,11 @@ class Desk:
 
         self.__desk[y][x] = self.__turn
         if not self.__check_win(x, y):
-            self.__turn = 1 - self.__turn
+            if self.__check_ways() == 0:
+                self.winner = "TIE"
+                return False
+            else:
+                self.__turn = 1 - self.__turn
         else:
             self.winner = desk_consts[self.__turn]
         return True
