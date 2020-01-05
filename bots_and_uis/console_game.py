@@ -1,35 +1,38 @@
 from bots_and_uis.controller import Controller
 
 
-class Bcolors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    WARNING = '\033[93m'
-    RED = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+UIConsts = {
+    "GREEN": '\033[92m',
+    "RED": '\033[91m',
+    "ENDC": '\033[0m',
+    "BOLD": '\033[1m',
+}
 
 
 class ConsoleUI(Controller):
     def make_turn(self, desk):
-        self.print_desk(desk)
-
-        input_line = input("write x,y: ").split(",")
-        x = int(input_line[0])
-        y = int(input_line[1])
+        print("\n\nplayer \"" + desk.turn + "\", it\'s your turn:")
+        self.print_desk(desk.desk)
+        insert = input("write place to move: ")
+        insert = int(insert)
+        y = int((insert - 1) / len(desk.desk[0]))
+        x = (insert - 1) % len(desk.desk[0])
         return [x, y]
 
+    def game_ended(self, desk, state):
+        print("\n\nplayer \"" + desk.turn + "\", wins:")
+        self.print_desk(desk.desk)
+        print(UIConsts['BOLD'] + state + UIConsts['ENDC'])
+        return
+
     def print_desk(self, desk):
-        print("\n\n")
         for i in range(len(desk)):
             print_string = ""
             for j in range(len(desk[i])):
                 if desk[i][j] == 1:
-                    print_string += Bcolors.BOLD + Bcolors.RED + "[X]" + Bcolors.ENDC
+                    print_string += UIConsts['BOLD'] + UIConsts['RED'] + "[X]" + UIConsts['ENDC']
                 elif desk[i][j] == 0:
-                    print_string += Bcolors.BOLD + Bcolors.GREEN + "[0]" + Bcolors.ENDC
+                    print_string += UIConsts['BOLD'] + UIConsts['GREEN'] + "[0]" + UIConsts['ENDC']
                 else:
                     print_string += "[" + str(len(desk[i]) * i + j + 1) + "]"
             print(print_string)
