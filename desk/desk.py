@@ -37,7 +37,7 @@ class Desk:
                 self.__desk[i].append(desk_consts["empty"])
         #  -1 = empty, 0 = "0", 1 = "X"
 
-    def __check_win(self, x, y, desk=None):
+    def check_win(self, x, y, desk=None):
         if not desk:
             desk = self.__desk
         turn = desk[y][x]
@@ -96,11 +96,13 @@ class Desk:
 
         return False
 
-    def __check_ways(self):
+    def num_of_ways(self, desk=None):
+        if not desk:
+            desk = self.__desk
         num = 0
-        for i in range(len(self.__desk)):
-            for j in range(len(self.__desk[i])):
-                if self.desk[i][j] == desk_consts["empty"]:
+        for i in range(len(desk)):
+            for j in range(len(desk[i])):
+                if desk[i][j] == desk_consts["empty"]:
                     num += 1
         return num
 
@@ -121,8 +123,8 @@ class Desk:
             return False
 
         self.__desk[y][x] = self.__turn
-        if not self.__check_win(x, y):
-            if self.__check_ways() == 0:
+        if not self.check_win(x, y):
+            if self.num_of_ways() == 0:
                 self.winner = "TIE"
                 return False
             else:
