@@ -7,107 +7,107 @@ desk_consts = {
 }
 
 
-class Desk:
-    def __init__(self, w=3, h=3, win_row=3):
-        self.__desk = None
-        self.__turn = desk_consts["X"]
-        self.__row_to_win = 3
-        self.winner = None
-        self.clear(w, h, win_row)
+def num_of_ways(desk):
+    num = 0
+    for i in range(len(desk)):
+        for j in range(len(desk[i])):
+            if desk[i][j] == desk_consts["empty"]:
+                num += 1
+    return num
 
-    # getters & setters
-    def get_desk(self):
-        return self.__desk
+
+def out_of_desk_range(x, y, desk):
+    return x > len(desk[0]) - 1 or x < 0 or y > len(desk) - 1 or y < 0
+
+
+def check_win(x, y, desk, win_row):
+    turn = desk[y][x]
+
+    #  vertical
+    shift = in_row = 0
+    while (not out_of_desk_range(x, y + shift, desk)) and (desk[y + shift][x] == turn):
+        in_row += 1
+        shift += 1
+    shift = 0
+    while (not out_of_desk_range(x, y + shift, desk)) and (desk[y + shift][x] == turn):
+        in_row += 1
+        shift -= 1
+    if in_row - 1 >= win_row:
+        return True
+
+    #  horizontal
+    shift = in_row = 0
+    while (not out_of_desk_range(x + shift, y, desk)) and (desk[y][x + shift] == turn):
+        in_row += 1
+        shift += 1
+    shift = 0
+    while (not out_of_desk_range(x + shift, y, desk)) and (desk[y][x + shift] == turn):
+        in_row += 1
+        shift -= 1
+    if in_row - 1 >= win_row:
+        return True
+
+    #  diagonal left up
+    shift = in_row = 0
+    while (not out_of_desk_range(x + shift, y + shift, desk)) and (
+            desk[y + shift][x + shift] == turn):
+        in_row += 1
+        shift += 1
+    shift = 0
+    while (not out_of_desk_range(x + shift, y + shift, desk)) and (
+            desk[y + shift][x + shift] == turn):
+        in_row += 1
+        shift -= 1
+    if in_row - 1 >= win_row:
+        return True
+
+    #  diagonal right up
+    shift = in_row = 0
+    while (not out_of_desk_range(x - shift, y + shift, desk)) and (
+            desk[y + shift][x - shift] == turn):
+        in_row += 1
+        shift += 1
+    shift = 0
+    while (not out_of_desk_range(x - shift, y + shift, desk)) and (
+            desk[y + shift][x - shift] == turn):
+        in_row += 1
+        shift -= 1
+    if in_row - 1 >= win_row:
+        return True
+
+    return False
+
+
+class Desk:
+    def __init__(self, w=3, h=3, win_row=3, desk=None, turn=desk_consts["X"]):
+        self.w = w
+        self.h = h
+        self.desk = desk
+        self.__turn = turn
+        self.win_row = win_row
+        self.winner = None
+        if not desk:
+            self.clear(w, h, win_row)
+
+    def clone(self):
+        return Desk(self.w, self.h, self.win_row, self.desk, self.__turn)
 
     def get_turn(self):
         return desk_consts[self.__turn]
 
-    desk = property(get_desk)
     turn = property(get_turn)
 
     # main funcs
     def clear(self, w=3, h=3, win_row=3):
         self.__turn = desk_consts["X"]  # 0 - 0, 1 - X
-        self.__desk = []
-        self.__row_to_win = win_row
+        self.desk = []
+        self.win_row = win_row
         self.winner = None
         for i in range(h):
-            self.__desk.append([])
+            self.desk.append([])
             for j in range(w):
-                self.__desk[i].append(desk_consts["empty"])
+                self.desk[i].append(desk_consts["empty"])
         #  -1 = empty, 0 = "0", 1 = "X"
-
-    def check_win(self, x, y, desk=None):
-        if not desk:
-            desk = self.__desk
-        turn = desk[y][x]
-
-        #  vertical
-        shift = in_row = 0
-        while (not self.__out_of_desk_range(x, y + shift)) and (desk[y + shift][x] == turn):
-            in_row += 1
-            shift += 1
-        shift = 0
-        while (not self.__out_of_desk_range(x, y + shift)) and (desk[y + shift][x] == turn):
-            in_row += 1
-            shift -= 1
-        if in_row - 1 >= self.__row_to_win:
-            return True
-
-        #  horizontal
-        shift = in_row = 0
-        while (not self.__out_of_desk_range(x + shift, y)) and (desk[y][x + shift] == turn):
-            in_row += 1
-            shift += 1
-        shift = 0
-        while (not self.__out_of_desk_range(x + shift, y)) and (desk[y][x + shift] == turn):
-            in_row += 1
-            shift -= 1
-        if in_row - 1 >= self.__row_to_win:
-            return True
-
-        #  diagonal left up
-        shift = in_row = 0
-        while (not self.__out_of_desk_range(x + shift, y + shift)) and (
-                desk[y + shift][x + shift] == turn):
-            in_row += 1
-            shift += 1
-        shift = 0
-        while (not self.__out_of_desk_range(x + shift, y + shift)) and (
-                desk[y + shift][x + shift] == turn):
-            in_row += 1
-            shift -= 1
-        if in_row - 1 >= self.__row_to_win:
-            return True
-
-        #  diagonal right up
-        shift = in_row = 0
-        while (not self.__out_of_desk_range(x - shift, y + shift)) and (
-                desk[y + shift][x - shift] == turn):
-            in_row += 1
-            shift += 1
-        shift = 0
-        while (not self.__out_of_desk_range(x - shift, y + shift)) and (
-                desk[y + shift][x - shift] == turn):
-            in_row += 1
-            shift -= 1
-        if in_row - 1 >= self.__row_to_win:
-            return True
-
-        return False
-
-    def num_of_ways(self, desk=None):
-        if not desk:
-            desk = self.__desk
-        num = 0
-        for i in range(len(desk)):
-            for j in range(len(desk[i])):
-                if desk[i][j] == desk_consts["empty"]:
-                    num += 1
-        return num
-
-    def __out_of_desk_range(self, x, y):
-        return x > len(self.__desk[0]) - 1 or x < 0 or y > len(self.__desk) - 1 or y < 0
 
     def make_turn(self, x, y):
 
@@ -115,16 +115,16 @@ class Desk:
         if not type(x) is int or not type(y) is int:
             return False
 
-        if self.__out_of_desk_range(x, y):
+        if out_of_desk_range(x, y, self.desk):
             return False
 
         # if cell is not empty, do not write
-        if self.__desk[y][x] != desk_consts["empty"]:
+        if self.desk[y][x] != desk_consts["empty"]:
             return False
 
-        self.__desk[y][x] = self.__turn
-        if not self.check_win(x, y):
-            if self.num_of_ways() == 0:
+        self.desk[y][x] = self.__turn
+        if not check_win(x, y, self.desk, self.win_row):
+            if num_of_ways(self.desk) == 0:
                 self.winner = "TIE"
                 return False
             else:

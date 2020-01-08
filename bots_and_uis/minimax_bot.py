@@ -1,5 +1,5 @@
 from bots_and_uis.controller import Controller
-from desk.desk import desk_consts
+from desk.desk import desk_consts, check_win
 
 
 def clone_desk(desk):
@@ -21,71 +21,44 @@ def get_all_ways(desk):
 
 
 class MiniMaxBot(Controller):
-    def __init__(self, max_depth=10):
+    def __init__(self):
         super().__init__()
-        self.max_depth = max_depth
-        self.our_figure = None
-        self.desk = None
+        self.win_row = None
 
     def make_turn(self, desk):
-        self.desk = desk
-        self.our_figure = desk.turn
+        cloned = clone_desk(desk.desk)
+        figure = desk_consts[desk.turn]
+        self.win_row = desk.win_row
+        ways = self.calc_states_tree(cloned, figure, get_all_ways(cloned))
+        for potential_way in ways:
+            if potential_way[2] == 1:
+                return potential_way
+        for potential_way in ways:
+            if potential_way[2] == 0:
+                return potential_way
+        return ways[0]
 
-        # clone state to manipulate it
-        state = clone_desk(desk.desk)
-        steps = min(self.max_depth, desk.num_of_ways(state))
+    def calc_states_tree(self, desk, figure, ways):
+        for potential_way in ways:
+            potential_way.append(self.get_value(desk, potential_way, figure))
+            potential_way[2] *= -1  # swap weight
+        return ways
 
-        potential_ways = self.get_ways_and_value(state, 1)
-        my_step = None
-        for value in potential_ways:
-            val = self.calc_states_tree(value, steps, -1)
-            if val["val"] == 1 or (val["val"] == 0 and not my_step):
-                my_step = val["way"]
-        return my_step
+    def get_value(self, desk, way, figure):
+        # if we know value of this case, return value
+        desk = clone_desk(desk)
+        desk[way[1]][way[0]] = figure
+        if check_win(way[0], way[1], desk, self.win_row):
+            return -1  # it will be swapped later
 
-    # recursive function
-    def calc_states_tree(self, value, steps, is_our_turn):
-        couuu()
-        if steps <= 0:
-            return {
-                "val": 0,
-            }
+        # if we need to go deeper, go deeper
+        ways = get_all_ways(desk)
+        if len(ways) > 0:
+            valued_ways = self.calc_states_tree(desk, 1 - figure, ways)
+            for potential_way in valued_ways:
+                if potential_way[2] == 1:
+                    return 1
+            return 0
 
-        # прямой ход - просчитываем состояния и значения
-        value["ways"] = self.get_ways_and_value(value["state"], -1 * is_our_turn)
-        for potential_way in value["ways"]:
-            if potential_way["val"] == 0:
-                potential_way["ways"] = self.calc_states_tree(potential_way, steps - 1, -1 * is_our_turn)
-
-        # обратный ход - назначаем веса объектам выше
-        for potential_way in value["ways"]:
-            if potential_way["val"] == is_our_turn:
-                value["val"] = is_our_turn
-
-        return value
-
-    def get_ways_and_value(self, state, is_our_turn):
-        figure = self.our_figure
-        if is_our_turn != 1:
-            figure = desk_consts[1 - desk_consts[self.our_figure]]
-
-        values = []
-        ways = get_all_ways(state)
-        for i in range(len(ways)):
-            new_state = clone_desk(state)
-            new_state[ways[i][1]][ways[i][0]] = desk_consts[figure]
-            if_win = self.desk.check_win(ways[i][0], ways[i][1], new_state)
-            values.append({
-                "way": ways[i],
-                "val": int(if_win) * is_our_turn,
-                "state": new_state,
-                "ways": []
-            })
-        return values
-
-
-aii = 1
-def couuu():
-    global aii
-    print(aii)
-    aii += 1
+        # if we dont have any ways to go, return value = 0
+        return 0

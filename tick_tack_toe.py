@@ -6,7 +6,7 @@ from bots_and_uis.minimax_bot import MiniMaxBot
 from referee import Referee
 
 referee = Referee(
-    ConsoleUI(),  # X - player
-    MiniMaxBot(),  # 0 - player
+    MiniMaxBot(),  # X - player
+    ConsoleUI(),  # 0 - player
     Desk(3, 3, 3),
 )
