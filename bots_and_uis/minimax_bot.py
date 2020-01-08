@@ -1,4 +1,5 @@
 from bots_and_uis.controller import Controller
+from bots_and_uis.random_bot import pick_random
 from desk.desk import desk_consts, check_win
 
 
@@ -20,12 +21,23 @@ def get_all_ways(desk):
     return ways
 
 
+def first_step(desk):
+    for row in desk:
+        for state in row:
+            if state != desk_consts["empty"]:
+                return False
+    return True
+
+
 class MiniMaxBot(Controller):
     def __init__(self):
         super().__init__()
         self.win_row = None
 
     def make_turn(self, desk):
+        if first_step(desk.desk):
+            return pick_random(desk.desk, desk.w, desk.h)
+
         cloned = clone_desk(desk.desk)
         figure = desk_consts[desk.turn]
         self.win_row = desk.win_row
