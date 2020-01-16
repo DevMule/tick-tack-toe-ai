@@ -16,7 +16,7 @@ def id_to_coord(height, index):
 
 
 def coord_to_id(height, y, x):
-    return len(height) * y + x
+    return height * y + x
 
 
 def print_desk(desk):
@@ -28,7 +28,7 @@ def print_desk(desk):
             elif desk[i][j] == desk_consts['0']:
                 print_string += UIConsts['BOLD'] + UIConsts['GREEN'] + "[0]" + UIConsts['ENDC']
             else:
-                print_string += "[" + str(coord_to_id(desk[i], i, j) + 1) + "]"
+                print_string += "[" + str(coord_to_id(len(desk), i, j) + 1) + "]"
         print(print_string)
 
 
@@ -39,7 +39,7 @@ class ConsoleUI(Controller):
         insert = int(input("write place to move: "))
         return id_to_coord(len(desk.desk[0]), insert - 1)
 
-    def game_ended(self, desk, state):
+    def game_ended(self, desk, state, my_figure):
         if state == "TIE":
             print("\n\nnobody wins:")
         else:

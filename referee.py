@@ -1,4 +1,4 @@
-from desk.desk import Desk
+from desk.desk import Desk, desk_consts
 
 RefereeConsts = {
     0: {
@@ -28,8 +28,8 @@ class Referee:
             self.desk.make_turn(t[0], t[1])
             self.game_loop()
         else:
-            self.player_0.game_ended(self.desk, RefereeConsts[0][self.desk.winner])
-            self.player_1.game_ended(self.desk, RefereeConsts[1][self.desk.winner])
+            self.player_0.game_ended(self.desk, RefereeConsts[0][self.desk.winner], desk_consts[0])
+            self.player_1.game_ended(self.desk, RefereeConsts[1][self.desk.winner], desk_consts[1])
 
     def ask_for_turn(self):
         current_player = self.player_0
