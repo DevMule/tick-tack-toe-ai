@@ -1,5 +1,5 @@
 from desk.desk import Desk
-from bots_and_uis.deeplearning_bot import DeepLearningBot
+from bots_and_uis.neural_network_bot import DeepLearningBot
 from bots_and_uis.console_game import ConsoleUI
 from bots_and_uis.random_bot import RandomBot
 from bots_and_uis.minimax_bot import MiniMaxBot
