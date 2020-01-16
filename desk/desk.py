@@ -129,7 +129,6 @@ class Desk:
             return False
 
         self.desk[y][x] = self.__turn
-        # todo history
         self.history.append([clone_desk(self.desk), [x, y], self.turn])
 
         if not check_win(x, y, self.desk, self.win_row):
