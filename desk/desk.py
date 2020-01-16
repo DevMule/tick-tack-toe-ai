@@ -7,6 +7,15 @@ desk_consts = {
 }
 
 
+def clone_desk(desk):
+    new_desk = []
+    for i in range(len(desk)):
+        new_desk.append([])
+        for j in range(len(desk[i])):
+            new_desk[i].append(desk[i][j])
+    return new_desk
+
+
 def num_of_ways(desk):
     num = 0
     for i in range(len(desk)):
@@ -79,18 +88,14 @@ def check_win(x, y, desk, win_row):
 
 
 class Desk:
-    def __init__(self, w=3, h=3, win_row=3, desk=None, turn=desk_consts["X"]):
+    def __init__(self, w=3, h=3, win_row=3):
         self.w = w
         self.h = h
-        self.desk = desk
-        self.__turn = turn
+        self.desk = None
+        self.__turn = desk_consts["X"]
         self.win_row = win_row
         self.winner = None
-        if not desk:
-            self.clear(w, h, win_row)
-
-    def clone(self):
-        return Desk(self.w, self.h, self.win_row, self.desk, self.__turn)
+        self.clear(w, h, win_row)
 
     def get_turn(self):
         return desk_consts[self.__turn]
@@ -110,8 +115,6 @@ class Desk:
         #  -1 = empty, 0 = "0", 1 = "X"
 
     def make_turn(self, x, y):
-
-        # todo refactor function
         if not type(x) is int or not type(y) is int:
             return False
 

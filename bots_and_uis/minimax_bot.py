@@ -1,15 +1,6 @@
 from bots_and_uis.controller import Controller
 from bots_and_uis.random_bot import pick_random
-from desk.desk import desk_consts, check_win
-
-
-def clone_desk(desk):
-    new_desk = []
-    for i in range(len(desk)):
-        new_desk.append([])
-        for j in range(len(desk[i])):
-            new_desk[i].append(desk[i][j])
-    return new_desk
+from desk.desk import desk_consts, check_win, clone_desk
 
 
 def get_all_ways(desk):
