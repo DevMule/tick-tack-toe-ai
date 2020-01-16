@@ -19,8 +19,20 @@ class Referee:
         self.player_0 = player_0  # 0 - player
         self.player_1 = player_1  # X - player
         self.desk = desk
+        self.rounds = None
 
-        self.game_loop()
+        # self.game_loop()
+
+    def play_matches(self, count=1):
+        self.rounds = {
+            "X": 0,
+            "0": 0,
+            "TIE": 0,
+        }
+        for i in range(count):
+            self.desk.clear()
+            self.game_loop()
+            self.rounds[self.desk.winner] += 1
 
     def game_loop(self):
         if not self.desk.winner:

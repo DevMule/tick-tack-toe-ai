@@ -109,11 +109,15 @@ class Desk:
     turn = property(get_turn)
 
     # main funcs
-    def clear(self, w=3, h=3, win_row=3):
+    def clear(self, w=None, h=None, win_row=None):
         self.history = []
         self.__turn = desk_consts["X"]  # 0 - 0, 1 - X
+        if not w or not h:
+            w = self.w
+            h = self.h
         self.desk = new_desk(w, h)
-        self.win_row = win_row
+        if win_row:
+            self.win_row = win_row
         self.winner = None
         #  -1 = empty, 0 = "0", 1 = "X"
 

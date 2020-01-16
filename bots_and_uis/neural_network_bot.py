@@ -12,7 +12,7 @@ import numpy as np
 
 game_result_weights = {
     "WIN": 1,
-    "TIE": .1,
+    "TIE": .25,
     "FAIL": 0,
 }
 
@@ -60,8 +60,10 @@ def desk_to_inputs(desk, my_figure):
 
 
 class NeuralNetworkBot(Controller):
-    def __init__(self, inputs=3 * 3, learn_rate=0.1, epochs=25):
+    def __init__(self, inputs=3 * 3, learn_rate=0.05, epochs=1):
         super().__init__()
+
+        self.allow_learning = True
 
         # learning values
         self.learn_rate = learn_rate
@@ -83,7 +85,12 @@ class NeuralNetworkBot(Controller):
 
         # calculate values in output nodes
         outputs = self.feedforward(inputs)
-        # print(outputs)
+
+        # make disable to choose not empty space
+        for i in range(len(outputs)):
+            if inputs[2 * i] == 1:
+                outputs[i] = 0
+
         summa = np.sum(outputs)
 
         # get one node randomly more value - more chance to be chosen
@@ -96,7 +103,8 @@ class NeuralNetworkBot(Controller):
                 chosen_index = i
                 break
 
-        return id_to_coord(len(desk.desk), chosen_index)
+        coords = id_to_coord(len(desk.desk), chosen_index)
+        return coords
 
     def feedforward(self, inputs):
         hiddens = []
@@ -110,12 +118,15 @@ class NeuralNetworkBot(Controller):
         return outputs
 
     def game_ended(self, desk, state, my_figure):
-        true_value = game_result_weights[state]
-        history = desk.history
-        for story in history[::-1]:
-            inputs = desk_to_inputs(story[0], my_figure)
-            output_id = coord_to_id(len(story[0]), story[1][1], story[1][0])
-            self.train(inputs, output_id, true_value)
+        if self.allow_learning:
+            true_value = game_result_weights[state]
+            history = desk.history
+            for story in history[::-1]:
+                inputs = desk_to_inputs(story[0], my_figure)
+                output_id = coord_to_id(len(story[0]), story[1][1], story[1][0])
+                self.train(inputs, output_id, true_value)
+                if story[2] == my_figure:
+                    None
 
     def train(self, inputs, o_id, true_value):
         for epoch in range(self.epochs):
