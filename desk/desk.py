@@ -7,6 +7,15 @@ desk_consts = {
 }
 
 
+def new_desk(w, h):
+    desk = []
+    for i in range(h):
+        desk.append([])
+        for j in range(w):
+            desk[i].append(desk_consts["empty"])
+    return desk
+
+
 def clone_desk(desk):
     new_desk = []
     for i in range(len(desk)):
@@ -91,10 +100,7 @@ class Desk:
     def __init__(self, w=3, h=3, win_row=3):
         self.w = w
         self.h = h
-        self.desk = None
-        self.__turn = desk_consts["X"]
-        self.win_row = win_row
-        self.winner = None
+        self.history = self.__turn = self.desk = self.win_row = self.winner = None
         self.clear(w, h, win_row)
 
     def get_turn(self):
@@ -104,14 +110,11 @@ class Desk:
 
     # main funcs
     def clear(self, w=3, h=3, win_row=3):
+        self.history = []
         self.__turn = desk_consts["X"]  # 0 - 0, 1 - X
-        self.desk = []
+        self.desk = new_desk(w, h)
         self.win_row = win_row
         self.winner = None
-        for i in range(h):
-            self.desk.append([])
-            for j in range(w):
-                self.desk[i].append(desk_consts["empty"])
         #  -1 = empty, 0 = "0", 1 = "X"
 
     def make_turn(self, x, y):
@@ -126,10 +129,13 @@ class Desk:
             return False
 
         self.desk[y][x] = self.__turn
+        # todo history
+        self.history.append([clone_desk(self.desk), [x, y], self.turn])
+
         if not check_win(x, y, self.desk, self.win_row):
             if num_of_ways(self.desk) == 0:
                 self.winner = "TIE"
-                return False
+                # return False
             else:
                 self.__turn = 1 - self.__turn
         else:
