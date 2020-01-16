@@ -12,7 +12,7 @@ import numpy as np
 
 game_result_weights = {
     "WIN": 1,
-    "TIE": .25,
+    "TIE": 0,
     "FAIL": 0,
 }
 
@@ -60,7 +60,7 @@ def desk_to_inputs(desk, my_figure):
 
 
 class NeuralNetworkBot(Controller):
-    def __init__(self, inputs=3 * 3, learn_rate=0.05, epochs=1):
+    def __init__(self, inputs=3 * 3, learn_rate=0.05, epochs=10):
         super().__init__()
 
         self.allow_learning = True
@@ -90,6 +90,7 @@ class NeuralNetworkBot(Controller):
         for i in range(len(outputs)):
             if inputs[2 * i] == 1:
                 outputs[i] = 0
+        print(outputs)
 
         summa = np.sum(outputs)
 
@@ -121,16 +122,31 @@ class NeuralNetworkBot(Controller):
         if self.allow_learning:
             true_value = game_result_weights[state]
             history = desk.history
+
             for story in history[::-1]:
-                inputs = desk_to_inputs(story[0], my_figure)
+                tmp_figure = my_figure
+                tmp_value = true_value
+
+                if state == "WIN":  # если выиграли - закрепляем свои ходы
+                    if story[2] == my_figure:
+                        tmp_figure = my_figure
+                    else:  # и учимся не ходить как враг
+                        tmp_figure = desk_consts[1 - desk_consts[my_figure]]
+                        tmp_value = game_result_weights['FAIL']
+
+                elif state == "FAIL":  # если проиграли - отучиваемся ходить как раньше
+                    if story[2] == my_figure:
+                        tmp_figure = my_figure
+                    else:  # и учимся ходить как враг
+                        tmp_figure = desk_consts[1 - desk_consts[my_figure]]
+                        tmp_value = game_result_weights['WIN']
+
+                inputs = desk_to_inputs(story[0], tmp_figure)
                 output_id = coord_to_id(len(story[0]), story[1][1], story[1][0])
-                self.train(inputs, output_id, true_value)
-                if story[2] == my_figure:
-                    None
+                self.train(inputs, output_id, tmp_value)
 
     def train(self, inputs, o_id, true_value):
         for epoch in range(self.epochs):
-
             # calculate hidden layer
             hidden_summas = []  # sum(i)
             hidden_values = []  # h(i)
