@@ -30,7 +30,7 @@ def inputs_to_key(inputs):
     return key
 
 
-neural_network_bot = NeuralNetworkBot(inputs=9, learn_rate=.05, epochs=100)
+neural_network_bot = NeuralNetworkBot(inputs=9, learn_rate=.2, epochs=25)
 
 referee = Referee(
     MiniMaxBot(),  # X - player
@@ -38,7 +38,7 @@ referee = Referee(
     Desk(3, 3, 3),
 )
 
-for i in range(1, 101):
+'''for i in range(1, 101):
     print(i)
     referee.desk.clear()
     referee.game_loop()
@@ -50,7 +50,7 @@ for i in range(101, 201):
     print(i)
     referee.desk.clear()
     referee.game_loop()
-    neural_network_bot.game_ended(referee.desk, RefereeConsts[0][referee.desk.winner], referee.desk.winner)
+    neural_network_bot.game_ended(referee.desk, RefereeConsts[0][referee.desk.winner], referee.desk.winner)'''
 
 referee.player_1 = neural_network_bot
 referee.player_0 = ConsoleUI()
