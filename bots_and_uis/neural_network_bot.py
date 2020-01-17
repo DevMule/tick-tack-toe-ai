@@ -1,5 +1,5 @@
 from bots_and_uis.controller import Controller
-from bots_and_uis.console_game import id_to_coord, coord_to_id, print_desk
+from bots_and_uis.console_game import id_to_coord, coord_to_id
 from desk.desk import desk_consts
 from random import random
 import numpy as np
@@ -12,7 +12,7 @@ import numpy as np
 
 game_result_weights = {
     "WIN": 1,
-    "TIE": 0,
+    "TIE": .2,
     "FAIL": 0,
 }
 
@@ -50,20 +50,18 @@ def desk_to_inputs(desk, my_figure):
     for i in range(len(desk)):
         for j in range(len(desk[i])):
             value = desk[i][j]
-
+            inputs.append(value)
             # 'contains something' = 1, 'empty' = 0
-            inputs.append(int(value != desk_consts['empty']))
+            # inputs.append(int(value != desk_consts['empty']))
 
             # 'me' = 1, 'not me' = 0
-            inputs.append(int(value != desk_consts[my_figure]))
+            # inputs.append(int(value != desk_consts[my_figure]))
     return inputs
 
 
 class NeuralNetworkBot(Controller):
     def __init__(self, inputs=3 * 3, learn_rate=0.05, epochs=10):
         super().__init__()
-
-        self.allow_learning = True
 
         # learning values
         self.learn_rate = learn_rate
@@ -73,7 +71,7 @@ class NeuralNetworkBot(Controller):
         self._hidden_neurons = []
         self._output_neurons = []
         for i in range(inputs):
-            weights = [.5 for x in range(inputs * 2)]
+            weights = [.5 for x in range(inputs)]
             self._hidden_neurons.append(Neuron(weights))
 
             weights = [.5 for x in range(inputs)]
@@ -88,7 +86,7 @@ class NeuralNetworkBot(Controller):
 
         # make disable to choose not empty space
         for i in range(len(outputs)):
-            if inputs[2 * i] == 1:
+            if inputs[i] != -1:
                 outputs[i] = 0
         print(outputs)
 
@@ -119,31 +117,34 @@ class NeuralNetworkBot(Controller):
         return outputs
 
     def game_ended(self, desk, state, my_figure):
-        if self.allow_learning:
-            true_value = game_result_weights[state]
-            history = desk.history
+        true_value = game_result_weights[state]
+        history = desk.history
 
-            for story in history[::-1]:
-                tmp_figure = my_figure
-                tmp_value = true_value
+        for story in history[::-1]:
+            tmp_figure = my_figure
+            tmp_value = true_value
 
-                if state == "WIN":  # если выиграли - закрепляем свои ходы
-                    if story[2] == my_figure:
-                        tmp_figure = my_figure
-                    else:  # и учимся не ходить как враг
-                        tmp_figure = desk_consts[1 - desk_consts[my_figure]]
-                        tmp_value = game_result_weights['FAIL']
+            if state == "WIN":  # если выиграли - закрепляем свои ходы
+                if story[2] == my_figure:
+                    tmp_figure = my_figure
+                else:  # и учимся не ходить как враг
+                    tmp_figure = desk_consts[1 - desk_consts[my_figure]]
+                    tmp_value = game_result_weights['FAIL']
 
-                elif state == "FAIL":  # если проиграли - отучиваемся ходить как раньше
-                    if story[2] == my_figure:
-                        tmp_figure = my_figure
-                    else:  # и учимся ходить как враг
-                        tmp_figure = desk_consts[1 - desk_consts[my_figure]]
-                        tmp_value = game_result_weights['WIN']
+            elif state == "FAIL":  # если проиграли - отучиваемся ходить как раньше
+                if story[2] == my_figure:
+                    tmp_figure = my_figure
+                else:  # и учимся ходить как враг
+                    tmp_figure = desk_consts[1 - desk_consts[my_figure]]
+                    tmp_value = game_result_weights['WIN']
 
-                inputs = desk_to_inputs(story[0], tmp_figure)
-                output_id = coord_to_id(len(story[0]), story[1][1], story[1][0])
-                self.train(inputs, output_id, tmp_value)
+            else:  # если ничья, то не делаем ничего
+                return
+
+            inputs = desk_to_inputs(story[0], tmp_figure)
+            output_id = coord_to_id(len(story[0]), story[1][1], story[1][0])
+
+            self.train(inputs, output_id, tmp_value)
 
     def train(self, inputs, o_id, true_value):
         for epoch in range(self.epochs):
