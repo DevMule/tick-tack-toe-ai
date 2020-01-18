@@ -36,7 +36,10 @@ class ConsoleUI(Controller):
     def make_turn(self, desk):
         print("\n\nplayer \"" + desk.turn + "\", it\'s your turn:")
         print_desk(desk.desk)
-        insert = int(input("write place to move: "))
+        try:
+            insert = int(input("write place to move: "))
+        except ValueError:
+            insert = 0
         return id_to_coord(len(desk.desk[0]), insert - 1)
 
     def game_ended(self, desk, state, my_figure):
