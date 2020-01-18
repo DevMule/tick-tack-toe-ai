@@ -8,6 +8,8 @@ import numpy as np
 # https://www.youtube.com/watch?v=6g4O5UOH304
 # https://python-scripts.com/intro-to-neural-networks
 #                                           tutorials
+experience_data_folder = 'bots_and_uis/neural_network_bot_experience/'
+
 game_result_weights = {
     "WIN": 1,
     "TIE": .2,
@@ -81,6 +83,28 @@ class NeuralNetworkBot(Controller):
         for i in range(outputs):
             weights = [.5 for x in range(hidden)]
             self._output_neurons.append(Neuron(weights))
+
+    def save_experience(self):
+        # name = exp_9_81_9.json
+        name = experience_data_folder + 'exp_' + \
+               str(len(self._hidden_neurons[0].weights)) + '_' + \
+               str(len(self._hidden_neurons)) + '_' + \
+               str(len(self._output_neurons)) + '.json'
+
+        data = {
+            'inputs': len(self._hidden_neurons[0].weights),
+            'hidden': [{
+                'weights': neuron.weights,
+                'bias': neuron.bias
+            } for neuron in self._hidden_neurons],
+            'outputs': [{
+                'weights': neuron.weights,
+                'bias': neuron.bias
+            } for neuron in self._output_neurons],
+        }
+
+        with open(name, "w") as write_file:
+            json.dump(data, write_file)
 
     def make_turn(self, desk):
         # set values to input nodes
