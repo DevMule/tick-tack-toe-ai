@@ -1,5 +1,5 @@
 from desk.desk import Desk, desk_consts
-from bots_and_uis.neural_network_bot import NeuralNetworkBot, desk_to_inputs, game_result_weights
+from bots_and_uis.neural_network_bot import NeuralNetworkBot
 from bots_and_uis.console_game import coord_to_id
 from bots_and_uis.random_bot import RandomBot
 from bots_and_uis.minimax_bot import MiniMaxBot
@@ -30,7 +30,13 @@ def inputs_to_key(inputs):
     return key
 
 
-neural_network_bot = NeuralNetworkBot(inputs=9, learn_rate=.2, epochs=25)
+neural_network_bot = NeuralNetworkBot(
+    inputs=9,
+    hidden=81,
+    outputs=9,
+    learn_rate=1,
+    epochs=1
+)
 
 referee = Referee(
     MiniMaxBot(),  # X - player
@@ -52,9 +58,11 @@ for i in range(101, 201):
     referee.game_loop()
     neural_network_bot.game_ended(referee.desk, RefereeConsts[0][referee.desk.winner], referee.desk.winner)'''
 
-referee.player_1 = neural_network_bot
+referee.player_X = neural_network_bot
 referee.player_0 = ConsoleUI()
 
+
+neural_network_bot.save_experience()
 for i in range(1000):
     referee.desk.clear()
     referee.game_loop()
