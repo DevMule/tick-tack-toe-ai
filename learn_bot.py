@@ -21,7 +21,7 @@ referee = Referee(
     Desk(3, 3, 3),
 )
 
-for i in range(1, 10001):
+for i in range(50000):
     print(i)
     referee.desk.clear()
     referee.game_loop()
