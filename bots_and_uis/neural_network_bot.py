@@ -62,27 +62,43 @@ def desk_to_inputs(desk, my_figure):
 class NeuralNetworkBot(Controller):
     def __init__(self,
                  inputs=9,
-                 hidden=9,
+                 hidden=81,
                  outputs=9,
+                 learning=False,  # будет ли бот изменять свой опыт
+                 new_experience=False,  # если истина, то бот создаст новый опыт, иначе загрузит старый
                  learn_rate=0.05,  # коэффициент изменения весов за один проход обучения
                  epochs=10  # количество проходов обучения по истории одной игры
                  ):
         super().__init__()
 
         # learning values
+        self.learning = learning  # do learn something new
         self.learn_rate = learn_rate
         self.epochs = epochs  # epochs after game ended
 
         # neurons
-        self._hidden_neurons = []
-        self._output_neurons = []
-        for i in range(hidden):
-            weights = [.5 for x in range(inputs)]
-            self._hidden_neurons.append(Neuron(weights))
+        if new_experience:
+            self._hidden_neurons = []
+            self._output_neurons = []
+            for i in range(hidden):
+                weights = [.5 for x in range(inputs)]
+                self._hidden_neurons.append(Neuron(weights))
 
-        for i in range(outputs):
-            weights = [.5 for x in range(hidden)]
-            self._output_neurons.append(Neuron(weights))
+            for i in range(outputs):
+                weights = [.5 for x in range(hidden)]
+                self._output_neurons.append(Neuron(weights))
+        else:
+            self._hidden_neurons, self._output_neurons = self.load_experience(inputs, hidden, outputs)
+
+    def load_experience(self, inputs, hidden, outputs):
+        # name = exp_9_81_9.json
+        name = experience_data_folder + 'exp_' + str(inputs) + '_' + str(hidden) + '_' + str(outputs) + '.json'
+        with open(name) as json_file:
+            data = json.load(json_file)
+            return [Neuron(data['hidden'][x]['weights'], data['hidden'][x]['bias'])
+                    for x in range(len(data['hidden']))], \
+                   [Neuron(data['outputs'][x]['weights'], data['outputs'][x]['bias'])
+                    for x in range(len(data['outputs']))]
 
     def save_experience(self):
         # name = exp_9_81_9.json
@@ -117,7 +133,6 @@ class NeuralNetworkBot(Controller):
         for i in range(len(outputs)):
             if inputs[i] != -1:
                 outputs[i] = 0
-        print(outputs)
 
         chosen_index = 0
         for i in range(len(outputs)):
@@ -151,11 +166,18 @@ class NeuralNetworkBot(Controller):
         return outputs
 
     def game_ended(self, desk, state, my_figure):
+        if not self.learning:
+            return
+
+        TEMPORARY_LEARN_RATE = self.learn_rate
+        LEARN_DECREASE_COEF = .5
         # fixme переписывать свои проигрыши - плохая идея,
         #  ведь бот ходит всегда таким способом, который изучил чуть ранее
         #  потому стоит преимущественно заучивать победные ходы, и отучиваться
         #  только от самых дерьмовых, например, свой последний ход при проигрыше
         #  и как итог - бот постоянно находится в состоянии переписывания правильных ходов другими "правильными"
+        #  ...
+        #  попробую сделать это так: каждый предыдущий ход имеет сдвиг на меньший коэффициент относительно предыдущего
         true_value = game_result_weights[state]
         history = desk.history
 
@@ -192,6 +214,8 @@ class NeuralNetworkBot(Controller):
                         outputs.append(1 - true_value)
 
                 self.train(inputs, outputs)
+                self.learn_rate *= LEARN_DECREASE_COEF
+        self.learn_rate = TEMPORARY_LEARN_RATE
 
     def train(self, inputs, outputs):
         for o_id in range(len(outputs)):
