@@ -13,3 +13,4 @@ referee = Referee(
 for i in range(10):
     referee.desk.clear()
     referee.game_loop()
+    referee.swap_players()

@@ -1,17 +1,7 @@
-from desk.desk import Desk, desk_consts
+from desk.desk import Desk
 from bots_and_uis.neural_network_bot import NeuralNetworkBot
-from bots_and_uis.console_game import coord_to_id
-from bots_and_uis.random_bot import RandomBot
-from bots_and_uis.minimax_bot import MiniMaxBot
 from bots_and_uis.console_game import ConsoleUI
-from referee import Referee, RefereeConsts
-
-
-def inputs_to_key(inputs):
-    key = 0
-    for k in range(len(inputs)):
-        key += pow(2, k) * inputs[k]
-    return key
+from referee import Referee
 
 
 neural_network_bot = NeuralNetworkBot(
@@ -21,7 +11,7 @@ neural_network_bot = NeuralNetworkBot(
     learning=True,  # бот будет учиться, менять свой опыт
     new_experience=False,  # бот при инициализации создаст новый опыт
     learn_rate=.1,  # коэффициент изменения веса для нейронов при одном цикле изучения
-    epochs=1  # количество проходов по истории после завершения игры
+    learn_decrease_coef=.5,
 )
 
 referee = Referee(

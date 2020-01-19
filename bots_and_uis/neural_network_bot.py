@@ -67,14 +67,14 @@ class NeuralNetworkBot(Controller):
                  learning=False,  # будет ли бот изменять свой опыт
                  new_experience=False,  # если истина, то бот создаст новый опыт, иначе загрузит старый
                  learn_rate=0.05,  # коэффициент изменения весов за один проход обучения
-                 epochs=10  # количество проходов обучения по истории одной игры
+                 learn_decrease_coef=.75  # коэффициент, с которым падает вес изучения для каждого предыдущего шага
                  ):
         super().__init__()
 
         # learning values
         self.learning = learning  # do learn something new
         self.learn_rate = learn_rate
-        self.epochs = epochs  # epochs after game ended
+        self.learn_decrease_coef = learn_decrease_coef
 
         # neurons
         if new_experience:
@@ -170,7 +170,6 @@ class NeuralNetworkBot(Controller):
             return
 
         TEMPORARY_LEARN_RATE = self.learn_rate
-        LEARN_DECREASE_COEF = .5
         # fixme переписывать свои проигрыши - плохая идея,
         #  ведь бот ходит всегда таким способом, который изучил чуть ранее
         #  потому стоит преимущественно заучивать победные ходы, и отучиваться
@@ -187,34 +186,32 @@ class NeuralNetworkBot(Controller):
 
         for story in history[::-1]:
             learning_figure = my_figure
+            if state == "WIN":  # если выиграли - закрепляем свои ходы
+                if story[2] == my_figure:
+                    learning_figure = my_figure
+                    true_value = 1
+                else:  # и учимся не ходить как враг
+                    learning_figure = desk_consts[1 - desk_consts[my_figure]]
+                    true_value = 0
 
-            for epoch in range(self.epochs):
-                if state == "WIN":  # если выиграли - закрепляем свои ходы
-                    if story[2] == my_figure:
-                        learning_figure = my_figure
-                        true_value = 1
-                    else:  # и учимся не ходить как враг
-                        learning_figure = desk_consts[1 - desk_consts[my_figure]]
-                        true_value = 0
+            elif state == "FAIL":  # если проиграли - отучиваемся ходить как раньше
+                if story[2] == my_figure:
+                    learning_figure = my_figure
+                    true_value = 0
+                else:  # и учимся ходить как враг
+                    learning_figure = desk_consts[1 - desk_consts[my_figure]]
+                    true_value = 1
 
-                elif state == "FAIL":  # если проиграли - отучиваемся ходить как раньше
-                    if story[2] == my_figure:
-                        learning_figure = my_figure
-                        true_value = 0
-                    else:  # и учимся ходить как враг
-                        learning_figure = desk_consts[1 - desk_consts[my_figure]]
-                        true_value = 1
+            inputs = desk_to_inputs(story[0], learning_figure)
+            outputs = []
+            for i in range(len(inputs)):
+                if i == coord_to_id(len(story[0]), story[1][1], story[1][0]):
+                    outputs.append(true_value)
+                else:  # todo переделать это говно
+                    outputs.append(1 - true_value)
 
-                inputs = desk_to_inputs(story[0], learning_figure)
-                outputs = []
-                for i in range(len(inputs)):
-                    if i == coord_to_id(len(story[0]), story[1][1], story[1][0]):
-                        outputs.append(true_value)
-                    else:  # todo переделать это говно
-                        outputs.append(1 - true_value)
-
-                self.train(inputs, outputs)
-                self.learn_rate *= LEARN_DECREASE_COEF
+            self.train(inputs, outputs)
+            self.learn_rate *= self.learn_decrease_coef
         self.learn_rate = TEMPORARY_LEARN_RATE
 
     def train(self, inputs, outputs):
