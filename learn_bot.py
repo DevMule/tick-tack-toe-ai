@@ -11,7 +11,8 @@ neural_network_bot = NeuralNetworkBot(
     learning=True,  # бот будет учиться, менять свой опыт
     new_experience=False,  # бот при инициализации создаст новый опыт
     learn_rate=.1,  # коэффициент изменения веса для нейронов при одном цикле изучения
-    learn_decrease_coef=.5,
+    learn_decrease_coef=.5,  # коэффициент, с которым падает вес изучения для каждого предыдущего
+                             #  шага чтобы не переписывать имеющийся позитивный опыт
 )
 
 referee = Referee(
