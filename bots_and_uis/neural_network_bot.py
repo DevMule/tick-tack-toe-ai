@@ -50,7 +50,11 @@ def desk_to_inputs(desk, my_figure):
     for i in range(len(desk)):
         for j in range(len(desk[i])):
             value = desk[i][j]
+            # преобразовать поле таким образом, чтобы бот всегда видел свою фигуру как "X"
+            if value != desk_consts['empty'] and my_figure != 'X':
+                value = 1 - value
             inputs.append(value)
+
             # 'contains something' = 1, 'empty' = 0
             # inputs.append(int(value != desk_consts['empty']))
 
@@ -181,8 +185,8 @@ class NeuralNetworkBot(Controller):
         history = desk.history
 
         # если ничья, то не переделываем ничего
-        if state == 'TIE':
-            return
+        # if state == 'TIE':
+        #    return
 
         for story in history[::-1]:
             learning_figure = my_figure
@@ -202,13 +206,19 @@ class NeuralNetworkBot(Controller):
                     learning_figure = desk_consts[1 - desk_consts[my_figure]]
                     true_value = 1
 
+            else:  # если ничья, то уменьшаем веса своего хода
+                learning_figure = my_figure
+                true_value = 0
+
             inputs = desk_to_inputs(story[0], learning_figure)
             outputs = []
             for i in range(len(inputs)):
                 if i == coord_to_id(len(story[0]), story[1][1], story[1][0]):
                     outputs.append(true_value)
-                else:  # todo переделать это говно
-                    outputs.append(1 - true_value)
+                else:
+                    outputs.append((1 - true_value) / (len(inputs) - 1))
+
+            # print(inputs, outputs)
 
             self.train(inputs, outputs)
             self.learn_rate *= self.learn_decrease_coef

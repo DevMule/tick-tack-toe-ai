@@ -10,7 +10,7 @@ referee = Referee(
     ConsoleUI(),  # 0 - player
     Desk(3, 3, 3),
 )
-for i in range(10):
+for i in range(1000):
     referee.desk.clear()
     referee.game_loop()
     referee.swap_players()
