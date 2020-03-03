@@ -174,7 +174,7 @@ class NeuralNetworkBot(Controller):
             return
 
         TEMPORARY_LEARN_RATE = self.learn_rate
-        #  переписывать свои проигрыши - плохая идея,
+        # fixme переписывать свои проигрыши - плохая идея,
         #  ведь бот ходит всегда таким способом, который изучил чуть ранее
         #  потому стоит преимущественно заучивать победные ходы, и отучиваться
         #  только от самых дерьмовых, например, свой последний ход при проигрыше
@@ -190,8 +190,6 @@ class NeuralNetworkBot(Controller):
 
         for story in history[::-1]:
             learning_figure = my_figure
-            o_id = coord_to_id(desk.h, story[1][0], story[1][1])
-
             if state == "WIN":  # если выиграли - закрепляем свои ходы
                 if story[2] == my_figure:
                     learning_figure = my_figure
@@ -213,72 +211,79 @@ class NeuralNetworkBot(Controller):
                 true_value = 0
 
             inputs = desk_to_inputs(story[0], learning_figure)
+            outputs = []
+            for i in range(len(inputs)):
+                if i == coord_to_id(len(story[0]), story[1][1], story[1][0]):
+                    outputs.append(true_value)
+                else:
+                    outputs.append((1 - true_value) / (len(inputs) - 1))
 
             # print(inputs, outputs)
 
-            self.train(inputs, true_value, o_id)
+            self.train(inputs, outputs)
             self.learn_rate *= self.learn_decrease_coef
         self.learn_rate = TEMPORARY_LEARN_RATE
 
-    def train(self, inputs, true_value, o_id):
+    def train(self, inputs, outputs):
+        for o_id in range(len(outputs)):
+            true_value = outputs[o_id]
 
-        # fixme перелопатить функцию обучения. чтобы понять в чём беда - загляни в json опыта
-        # calculate hidden layer
-        hidden_summas = []  # sum(i)
-        hidden_values = []  # h(i)
-        for i in range(len(self._hidden_neurons)):
-            hidden_sum = np.dot(self._hidden_neurons[i].weights, inputs) + self._hidden_neurons[i].bias
-            hidden_summas.append(hidden_sum)
-            hidden_values.append(sigmoid(hidden_sum))
+            # calculate hidden layer
+            hidden_summas = []  # sum(i)
+            hidden_values = []  # h(i)
+            for i in range(len(self._hidden_neurons)):
+                hidden_sum = np.dot(self._hidden_neurons[i].weights, inputs) + self._hidden_neurons[i].bias
+                hidden_summas.append(hidden_sum)
+                hidden_values.append(sigmoid(hidden_sum))
 
-        # current value
-        output_sum = np.dot(self._output_neurons[o_id].weights, hidden_values) + self._output_neurons[o_id].bias
-        deriv_sigmoid_out_sum = deriv_sigmoid(output_sum)
-        y_pred = sigmoid(output_sum)
+            # current value
+            output_sum = np.dot(self._output_neurons[o_id].weights, hidden_values) + self._output_neurons[o_id].bias
+            deriv_sigmoid_out_sum = deriv_sigmoid(output_sum)
+            y_pred = sigmoid(output_sum)
 
-        # --- Подсчет частных производных
-        # dL/dY_pred
-        dl_dy_pred = -2 * (true_value - y_pred)
+            # --- Подсчет частных производных
+            # dL/dY_pred
+            dl_dy_pred = -2 * (true_value - y_pred)
 
-        # ------ выходной нейрон O(id) ------
-        # задаём производную изменения весов для соединений со скрытыми нейронами
-        d_ypred_d_weights = []
-        for i in range(len(hidden_values)):
-            h = hidden_values[i]
-            d_ypred_d_weights.append(h * deriv_sigmoid_out_sum)
+            # ------ выходной нейрон O(id) ------
+            # задаём производную изменения весов для соединений со скрытыми нейронами
+            d_ypred_d_weights = []
+            for i in range(len(hidden_values)):
+                h = hidden_values[i]
+                d_ypred_d_weights.append(h * deriv_sigmoid_out_sum)
 
-        # задаём производную для сдвига для выходного нейрона
-        d_ypred_d_bias = deriv_sigmoid(output_sum)
+            # задаём производную для сдвига для выходного нейрона
+            d_ypred_d_bias = deriv_sigmoid(output_sum)
 
-        # задаём производную для изменения для скрытых нейронов
-        d_ypred_d_hi_s = []  # dYpred/dh(i)
-        for i in range(len(self._output_neurons[o_id].weights)):
-            weight = self._output_neurons[o_id].weights[i]
-            d_ypred_d_hi_s.append(weight * deriv_sigmoid_out_sum)
+            # задаём производную для изменения для скрытых нейронов
+            d_ypred_d_hi_s = []  # dYpred/dh(i)
+            for i in range(len(self._output_neurons[o_id].weights)):
+                weight = self._output_neurons[o_id].weights[i]
+                d_ypred_d_hi_s.append(weight * deriv_sigmoid_out_sum)
 
-        # ------ скрытые нейроны h(i) ------
-        hidden_derivatives = []
-        for i in range(len(hidden_summas)):
-            sum_hi = hidden_summas[i]
-            d_hi_d_wj_s = []
-            for j in range(len(inputs)):
-                d_hi_d_wj_s.append(inputs[j] * deriv_sigmoid(sum_hi))
-            d_hi_d_biasi = deriv_sigmoid(sum_hi)
-            hidden_derivatives.append([d_hi_d_wj_s, d_hi_d_biasi])
+            # ------ скрытые нейроны h(i) ------
+            hidden_derivatives = []
+            for i in range(len(hidden_summas)):
+                sum_hi = hidden_summas[i]
+                d_hi_d_wj_s = []
+                for j in range(len(inputs)):
+                    d_hi_d_wj_s.append(inputs[j] * deriv_sigmoid(sum_hi))
+                d_hi_d_biasi = deriv_sigmoid(sum_hi)
+                hidden_derivatives.append([d_hi_d_wj_s, d_hi_d_biasi])
 
-        # ------ Обновляем вес и смещения ------
-        # для h(i)
-        for i in range(len(self._hidden_neurons)):
-            neuron = self._hidden_neurons[i]
-            d_ypred_d_hi = d_ypred_d_hi_s[i]
-            for j in range(len(neuron.weights)):
-                d_hi_d_wj = hidden_derivatives[i][0][j]
-                self._hidden_neurons[i].weights[j] -= self.learn_rate * dl_dy_pred * d_ypred_d_hi * d_hi_d_wj
-            d_hi_d_bi = hidden_derivatives[i][1]
-            self._hidden_neurons[i].bias -= self.learn_rate * dl_dy_pred * d_ypred_d_hi * d_hi_d_bi
+            # ------ Обновляем вес и смещения ------
+            # для h(i)
+            for i in range(len(self._hidden_neurons)):
+                neuron = self._hidden_neurons[i]
+                d_ypred_d_hi = d_ypred_d_hi_s[i]
+                for j in range(len(neuron.weights)):
+                    d_hi_d_wj = hidden_derivatives[i][0][j]
+                    self._hidden_neurons[i].weights[j] -= self.learn_rate * dl_dy_pred * d_ypred_d_hi * d_hi_d_wj
+                d_hi_d_bi = hidden_derivatives[i][1]
+                self._hidden_neurons[i].bias -= self.learn_rate * dl_dy_pred * d_ypred_d_hi * d_hi_d_bi
 
-        # для выходного нейрона O(id)
-        for i in range(len(self._output_neurons[o_id].weights)):
-            d_ypred_d_wi = d_ypred_d_weights[i]
-            self._output_neurons[o_id].weights[i] -= self.learn_rate * dl_dy_pred * d_ypred_d_wi
-        self._output_neurons[o_id].bias -= self.learn_rate * dl_dy_pred * d_ypred_d_bias
+            # для выходного нейрона O(id)
+            for i in range(len(self._output_neurons[o_id].weights)):
+                d_ypred_d_wi = d_ypred_d_weights[i]
+                self._output_neurons[o_id].weights[i] -= self.learn_rate * dl_dy_pred * d_ypred_d_wi
+            self._output_neurons[o_id].bias -= self.learn_rate * dl_dy_pred * d_ypred_d_bias
