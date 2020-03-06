@@ -66,7 +66,7 @@ def desk_to_inputs(desk, my_figure):
 class NeuralNetworkBot(Controller):
     def __init__(self,
                  inputs=9,
-                 hidden=81,
+                 hidden=9,
                  outputs=9,
                  learning=False,  # будет ли бот изменять свой опыт
                  new_experience=False,  # если истина, то бот создаст новый опыт, иначе загрузит старый
