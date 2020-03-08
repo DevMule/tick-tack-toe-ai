@@ -3,6 +3,7 @@ from bots_and_uis.console_game import id_to_coord, coord_to_id
 from desk.desk import desk_consts
 import json
 import numpy as np
+import random
 
 # this bot is based on
 # https://www.youtube.com/watch?v=6g4O5UOH304
@@ -85,12 +86,12 @@ class NeuralNetworkBot(Controller):
             self._hidden_neurons = []
             self._output_neurons = []
             for i in range(hidden):
-                weights = [.5 for x in range(inputs)]
-                self._hidden_neurons.append(Neuron(weights))
+                weights = [random.random() * 2 - 1 for x in range(inputs)]
+                self._hidden_neurons.append(Neuron(weights, random.random() * 2 - 1))
 
             for i in range(outputs):
-                weights = [.5 for x in range(hidden)]
-                self._output_neurons.append(Neuron(weights))
+                weights = [random.random() * 2 - 1 for x in range(hidden)]
+                self._output_neurons.append(Neuron(weights, random.random() * 2 - 1))
         else:
             self._hidden_neurons, self._output_neurons = self.load_experience(inputs, hidden, outputs)
 
