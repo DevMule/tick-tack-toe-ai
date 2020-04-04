@@ -223,7 +223,6 @@ class NeuralNetworkBot(Controller):
 
     def train(self, inputs, true_value, o_id):
 
-        # fixme перелопатить функцию обучения. чтобы понять в чём беда - загляни в json опыта
         # calculate hidden layer
         hidden_summas = []  # sum(i)
         hidden_values = []  # h(i)
