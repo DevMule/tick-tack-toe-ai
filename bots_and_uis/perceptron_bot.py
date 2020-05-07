@@ -1,5 +1,4 @@
 from random import random
-
 from bots_and_uis.neural_network_bot import desk_to_inputs
 from bots_and_uis.console_game import id_to_coord
 import json
@@ -101,10 +100,14 @@ class PerceptronBot(Controller):
             if inputs[i] != -1:
                 outputs[i] = 0
 
+        summ = sum(outputs)
+        r = random() * summ
         chosen_index = 0
         for i in range(len(outputs)):
-            if outputs[i] > outputs[chosen_index]:
+            r -= outputs[i]
+            if r <= 0:
                 chosen_index = i
+                break
 
         coords = id_to_coord(len(desk.desk), chosen_index)
         return coords

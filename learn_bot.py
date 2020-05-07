@@ -9,6 +9,6 @@ with open('bots_and_uis/perceptron_bot_experience/dataset.json') as json_file:
 
 # learn bot
 np.random.seed(1)
-perc = PerceptronBot('mySave', 9, 18, 18, 9)  # error = 0.14
+perc = PerceptronBot('mySave', 9, 18, 36, 9)  # error = 0.11111111114856236
 perc.network.learn(inp, out)
 perc.save_experience()
