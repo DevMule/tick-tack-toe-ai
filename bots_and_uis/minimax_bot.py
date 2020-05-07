@@ -1,4 +1,5 @@
 from bots_and_uis.controller import Controller
+from bots_and_uis.neural_network_bot import desk_to_inputs
 from bots_and_uis.random_bot import pick_random
 from desk.desk import desk_consts, check_win, clone_desk
 
@@ -24,21 +25,27 @@ class MiniMaxBot(Controller):
     def __init__(self):
         super().__init__()
         self.win_row = None
+        self.cache = {}  # desk state -> best turn
 
     def make_turn(self, desk):
         if first_step(desk.desk):
             return pick_random(desk.desk, desk.w, desk.h)
 
         cloned = clone_desk(desk.desk)
+        inputs = desk_to_inputs(cloned, desk.turn)
+        if str(inputs) in self.cache.keys(): return self.cache[str(inputs)]
         figure = desk_consts[desk.turn]
         self.win_row = desk.win_row
         ways = self.calc_states_tree(cloned, figure, get_all_ways(cloned))
         for potential_way in ways:
             if potential_way[2] == 1:
+                self.cache[str(inputs)] = potential_way
                 return potential_way
         for potential_way in ways:
             if potential_way[2] == 0:
+                self.cache[str(inputs)] = potential_way
                 return potential_way
+        self.cache[str(inputs)] = ways[0]
         return ways[0]
 
     def calc_states_tree(self, desk, figure, ways):

@@ -1,84 +1,110 @@
-# neural network from here
-# https://habr.com/ru/post/271563/
-# https://radioprog.ru/post/786
-# https://radioprog.ru/post/780
+from random import random
 
 from bots_and_uis.neural_network_bot import desk_to_inputs
 from bots_and_uis.console_game import id_to_coord
+import json
 from bots_and_uis.controller import Controller
 import numpy as np
+from typing import Dict, List, Union
+
+experience_data_folder = 'bots_and_uis/perceptron_bot_experience/'
 
 
-class Perceptron3:
-    def __init__(self, inputs: int, hidden: int, outputs: int):
-        np.random.seed(1)
-        # случайно инициализируем веса, в среднем - 0
-        self.syn0 = 2 * np.random.random((inputs, hidden)) - 1
-        self.syn1 = 2 * np.random.random((hidden, outputs)) - 1
+def sigmoid(x: Union[int, float, np.ndarray]) -> float:
+    return 1 / (1 + np.exp(-x))
 
-    @staticmethod
-    def sigmoid(x):
-        return 1 / (1 + np.exp(-x))
 
-    @staticmethod
-    def deriv_sigmoid(x):
-        fx = Perceptron3.sigmoid(x)
-        return fx * (1 - fx)
+def deriv_sigmoid(x: Union[int, float, np.ndarray]) -> float:
+    fx = sigmoid(x)
+    return fx * (1 - fx)
 
-    def learn(self, inputs: [], outputs: [], epochs: int = 100000):
-        inp = np.array(inputs)
-        out = np.array(outputs)
 
-        for i in range(epochs):
+class Rumelhart:
+    def __init__(self, layer_1: int, layer_2: int, *other_layers: int):
+        layers = [layer_1, layer_2] + list(other_layers)
+        self._synapses = []
+        self._biases = []
+        for i in range(len(layers) - 1):
+            self._synapses.append((2 * np.random.random((layers[i], layers[i + 1])) - 1))
+            self._biases.append((2 * np.random.random(layers[i + 1]) - 1))
 
-            # проходим вперёд по слоям 0, 1 и 2
-            l0 = inp
-            l1 = Perceptron3.sigmoid(np.dot(l0, self.syn0))
-            l2 = Perceptron3.sigmoid(np.dot(l1, self.syn1))
+    def feedforward(self, inp: Union[List[float], np.ndarray]) -> List[float]:
+        li = np.array(inp)
+        for i in range(len(self._synapses)):
+            li = sigmoid(np.dot(li, self._synapses[i]) + self._biases[i])
+        return li.tolist()
 
-            # как сильно мы ошиблись относительно нужной величины?
-            l2_error = out - l2
+    @property
+    def raw(self) -> Dict[str, list]:
+        return {
+            "synapses": [x.tolist() for x in self._synapses],
+            "biases": [x.tolist() for x in self._biases]
+        }
 
-            if (i % 10000) == 0:
-                print("Error: ", str(np.mean(np.abs(l2_error))))
+    @raw.setter
+    def raw(self, raw: Dict[str, list]):
+        self._synapses = [np.array(x) for x in raw["synapses"]]
+        self._biases = [np.array(x) for x in raw["biases"]]
 
-            # в какую сторону нужно двигаться?
-            # если мы были уверены в предсказании, то сильно менять его не надо
-            l2_delta = l2_error * Perceptron3.deriv_sigmoid(l2)
+    def learn(self,
+              inp: List[List[float]],
+              out: List[List[float]],
+              epochs: int = 100000,
+              learning_rate: Union[float, int] = .1,
+              err_print: bool = True,
+              err_print_frequency: int = 10000,
+              ):
+        inp = np.array(inp)
+        out = np.array(out)
+        for epoch in range(epochs):
+            Si = [inp]
+            Xi = [sigmoid(Si[-1])]
+            for i in range(len(self._synapses)):
+                Si.append(np.dot(Xi[i], self._synapses[i]) + self._biases[i])
+                Xi.append(sigmoid(Si[-1]))
 
-            # как сильно значения l1 влияют на ошибки в l2?
-            l1_error = l2_delta.dot(self.syn1.T)
+            Ei = [out - Xi[-1]]
+            for i in range(len(Xi) - 2, 0, -1): Ei.insert(0, Ei[0].dot(self._synapses[i].T))
 
-            # в каком направлении нужно двигаться, чтобы прийти к l1?
-            # если мы были уверены в предсказании, то сильно менять его не надо
-            l1_delta = l1_error * Perceptron3.deriv_sigmoid(l1)
+            for i in range(len(self._synapses)):
+                grad = np.multiply(Ei[i], deriv_sigmoid(Si[i + 1]))
+                dw = np.dot(grad.T, Xi[i]).T
+                self._synapses[i] += dw * learning_rate
+                self._biases[i] += np.mean(dw, axis=0) * learning_rate
 
-            self.syn1 += l1.T.dot(l2_delta)
-            self.syn0 += l0.T.dot(l1_delta)
-
-    def feedforward(self, inputs: []):
-        l0 = np.array(inputs)
-        l1 = Perceptron3.sigmoid(np.dot(l0, self.syn0))
-        l2 = Perceptron3.sigmoid(np.dot(l1, self.syn1))
-        return l2
+            if err_print and (epoch % err_print_frequency) == 0:
+                print("Error: ", str(np.mean(np.abs(Ei[-1]))))
 
 
 class PerceptronBot(Controller):
     def __init__(self,
-                 inputs: int = 9,
-                 hidden: int = 9,
-                 outputs: int = 9
+                 tag: str = None,  # name with which will be saved and load exp
+                 *layers: int
                  ):
         super().__init__()
-        self.perceptron = Perceptron3(inputs, hidden, outputs)
+        self.network: Rumelhart = Rumelhart(*layers)
+        self.tag: str = tag
+
+    def load_experience(self):
+        with open(experience_data_folder + self.tag + '.json') as json_file:
+            self.network.raw = json.load(json_file)
+
+    def save_experience(self):
+        with open(experience_data_folder + self.tag + '.json', "w") as write_file:
+            json.dump(self.network.raw, write_file)
 
     def make_turn(self, desk):
         inputs = desk_to_inputs(desk.desk, desk.turn)
-        outputs = self.perceptron.feedforward(inputs)
+        outputs = self.network.feedforward(inputs)
+
+        for i in range(len(outputs)):
+            if inputs[i] != -1:
+                outputs[i] = 0
 
         chosen_index = 0
         for i in range(len(outputs)):
-            if outputs[i] > outputs[chosen_index] and inputs[i] == -1:
+            if outputs[i] > outputs[chosen_index]:
                 chosen_index = i
 
-        return id_to_coord(len(desk.desk), chosen_index)
+        coords = id_to_coord(len(desk.desk), chosen_index)
+        return coords
