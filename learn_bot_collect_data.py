@@ -14,7 +14,7 @@ referee = Referee(
 )
 
 # collect data
-N = 100
+N = 1000
 for i in range(N):
     referee.desk.clear()
     referee.game_loop()

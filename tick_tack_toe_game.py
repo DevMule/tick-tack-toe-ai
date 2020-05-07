@@ -6,7 +6,7 @@ from bots_and_uis.random_bot import RandomBot
 from bots_and_uis.minimax_bot import MiniMaxBot
 from referee import Referee
 
-pb = PerceptronBot("mySave", 9, 9, 9, 9)
+pb = PerceptronBot("mySave", 9, 9)
 pb.load_experience()
 
 referee = Referee(
